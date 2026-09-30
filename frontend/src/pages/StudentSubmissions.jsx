@@ -1,0 +1,8 @@
+import { useEffect, useState } from 'react';
+import { Download } from 'lucide-react';
+import { useAuth } from '../context';
+import { getMySubmissions, getAssignments, getCourses } from '../services/firestoreService';
+import { formatDate } from '../utils/constants';
+import StatusPill from '../components/StatusPill';
+
+export default function StudentSubmissions(){const {user}=useAuth();const [subs,setSubs]=useState([]);const [assignments,setAssignments]=useState([]);const [courses,setCourses]=useState([]);const [error,setError]=useState('');useEffect(()=>{Promise.all([getMySubmissions(user.uid),getAssignments(),getCourses()]).then(([s,a,c])=>{setSubs(s);setAssignments(a);setCourses(c)}).catch(e=>setError(e.message));},[user.uid]);const names=Object.fromEntries(assignments.map(a=>[a.id,a.title]));const courseNames=Object.fromEntries(courses.map(c=>[c.id,c.courseName]));return <div><div className="section-title"><div><span className="eyebrow">Submission history</span><h2>My submissions</h2></div></div>{error&&<div className="alert error">{error}</div>}<div className="card table-wrap"><table><thead><tr><th>Assignment</th><th>Course</th><th>Version</th><th>Submitted</th><th>Status</th><th>Marks</th><th>Feedback</th><th>File</th></tr></thead><tbody>{subs.map(s=><tr key={s.id}><td>{names[s.assignmentId]||s.assignmentId}</td><td>{courseNames[s.courseId]||s.courseId||'—'}</td><td>v{s.version}</td><td>{formatDate(s.submittedAt)}</td><td><StatusPill status={s.submissionStatus}/></td><td>{s.marks??'—'}</td><td>{s.feedback||'—'}</td><td>{s.fileUrl?<a href={s.fileUrl} target="_blank" rel="noreferrer" title="Open submitted file"><Download size={18}/></a>:'—'}</td></tr>)}</tbody></table>{!subs.length&&<div className="empty">No submissions yet.</div>}</div></div>}

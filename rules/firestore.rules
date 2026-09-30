@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function roleIs(role) { return signedIn() && profile().role == role; }
+    function teacherOrAdmin() { return roleIs('teacher') || roleIs('admin'); }
+    function ownsCourse(courseId) {
+      return signedIn() && get(/databases/$(database)/documents/courses/$(courseId)).data.teacherId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow create: if signedIn() && request.auth.uid == userId
+        && request.resource.data.role == 'student'
+        && request.resource.data.email == request.auth.token.email;
+      allow read: if signedIn() && (request.auth.uid == userId || teacherOrAdmin());
+      allow update: if signedIn() && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.email == resource.data.email;
+      allow delete: if roleIs('admin');
+    }
+
+    match /courses/{courseId} {
+      allow read: if signedIn() && (
+        roleIs('student') || roleIs('admin') || (roleIs('teacher') && resource.data.teacherId == request.auth.uid)
+      );
+      allow create: if teacherOrAdmin() && (roleIs('admin') || request.resource.data.teacherId == request.auth.uid);
+      allow update, delete: if teacherOrAdmin() && (roleIs('admin') || resource.data.teacherId == request.auth.uid);
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if signedIn() && (
+        roleIs('student') || roleIs('admin') || (roleIs('teacher') && resource.data.teacherId == request.auth.uid)
+      );
+      allow create: if teacherOrAdmin()
+        && request.resource.data.createdBy == request.auth.uid
+        && (roleIs('admin') || ownsCourse(request.resource.data.courseId));
+      allow update: if teacherOrAdmin()
+        && (roleIs('admin') || resource.data.createdBy == request.auth.uid || ownsCourse(resource.data.courseId))
+        && (roleIs('admin') || request.resource.data.createdBy == resource.data.createdBy)
+        && (roleIs('admin') || request.resource.data.teacherId == resource.data.teacherId);
+      allow delete: if teacherOrAdmin()
+        && (roleIs('admin') || resource.data.createdBy == request.auth.uid || ownsCourse(resource.data.courseId));
+    }
+
+    match /submissions/{submissionId} {
+      allow create: if roleIs('student')
+        && request.resource.data.studentId == request.auth.uid
+        && exists(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId))
+        && request.resource.data.courseId == get(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId)).data.courseId
+        && request.resource.data.teacherId == get(/databases/$(database)/documents/assignments/$(request.resource.data.assignmentId)).data.teacherId;
+
+      // These fields are intentionally denormalized to make authorized queries
+      // evaluable by Firestore Rules; Rules are not filters.
+      allow read: if signedIn() && (
+        resource.data.studentId == request.auth.uid ||
+        roleIs('admin') ||
+        (roleIs('teacher') && resource.data.teacherId == request.auth.uid)
+      );
+
+      allow update: if roleIs('teacher')
+        && resource.data.teacherId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['marks', 'feedback', 'submissionStatus', 'gradedAt']);
+
+      allow delete: if roleIs('admin');
+    }
+
+    match /analytics/{docId} {
+      allow read: if teacherOrAdmin();
+      allow write: if false;
+    }
+  }
+}

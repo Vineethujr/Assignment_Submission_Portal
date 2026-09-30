@@ -1,0 +1,41 @@
+# Node
+node_modules/
+**/node_modules/
+
+# Build output
+frontend/dist/
+coverage/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Service-account credentials (NEVER commit)
+service-account*.json
+*-service-account*.json
+firebase-service-account*.json
+
+# Python
+backend/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Firebase local state
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Uploaded runtime data
+uploads/
+*.part

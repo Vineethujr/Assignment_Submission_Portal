@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function profile() { return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data; }
+    function teacherOwnsAssignment(assignmentId) {
+      return profile().role == 'admin' ||
+        (profile().role == 'teacher' && firestore.get(/databases/(default)/documents/assignments/$(assignmentId)).data.teacherId == request.auth.uid);
+    }
+
+    match /assignments/{assignmentId}/{studentId}/{fileName} {
+      allow create, update: if signedIn()
+        && request.auth.uid == studentId
+        && firestore.exists(/databases/(default)/documents/assignments/$(assignmentId))
+        && request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType in [
+          'application/pdf',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'image/png',
+          'image/jpeg'
+        ];
+
+      allow read: if signedIn() && (request.auth.uid == studentId || teacherOwnsAssignment(assignmentId));
+      allow delete: if signedIn() && (request.auth.uid == studentId || teacherOwnsAssignment(assignmentId));
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

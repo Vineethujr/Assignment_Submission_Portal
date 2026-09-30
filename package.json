@@ -1,0 +1,23 @@
+{
+  "name": "cloud-based-assignment-submission-portal",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "install:frontend": "npm --prefix frontend install",
+    "install:functions": "npm --prefix functions install",
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix frontend test && npm --prefix functions test",
+    "emulators": "firebase emulators:start",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes,storage",
+    "deploy:functions": "firebase deploy --only functions",
+    "deploy:all": "npm run build && firebase deploy",
+    "seed": "node scripts/seed-demo.js",
+    "seed:emulator": "node scripts/seed-emulator.js"
+  },
+  "devDependencies": {
+    "firebase-admin": "^13.5.0",
+    "firebase-tools": "^14.16.0"
+  }
+}

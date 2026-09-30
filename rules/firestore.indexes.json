@@ -1,0 +1,10 @@
+{
+  "indexes": [
+    {"collectionGroup": "submissions", "queryScope": "COLLECTION", "fields": [{"fieldPath": "studentId", "order": "ASCENDING"}, {"fieldPath": "submittedAt", "order": "DESCENDING"}]},
+    {"collectionGroup": "submissions", "queryScope": "COLLECTION", "fields": [{"fieldPath": "teacherId", "order": "ASCENDING"}, {"fieldPath": "submittedAt", "order": "DESCENDING"}]},
+    {"collectionGroup": "submissions", "queryScope": "COLLECTION", "fields": [{"fieldPath": "assignmentId", "order": "ASCENDING"}, {"fieldPath": "teacherId", "order": "ASCENDING"}, {"fieldPath": "submittedAt", "order": "DESCENDING"}]},
+    {"collectionGroup": "assignments", "queryScope": "COLLECTION", "fields": [{"fieldPath": "teacherId", "order": "ASCENDING"}, {"fieldPath": "deadline", "order": "ASCENDING"}]},
+    {"collectionGroup": "assignments", "queryScope": "COLLECTION", "fields": [{"fieldPath": "deadline", "order": "ASCENDING"}]}
+  ],
+  "fieldOverrides": []
+}

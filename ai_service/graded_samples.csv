@@ -1,0 +1,5 @@
+text,score
+"The architecture uses object storage for files and a managed database for metadata. Authentication and role-based access are separated.",90
+"The project uses cloud storage and a database. Students can submit files and teachers can review them.",78
+"It has login and file upload but does not explain scalability or security.",62
+"A cloud-native design can use a CDN, API gateway, autoscaling compute, managed database and object storage.",94
